@@ -8,6 +8,23 @@ POSIX compliant shell that's capable of
 - running external programs and builtin commands like
 cd, pwd, echo and more.
 
+## Completed
+
+- Prompt printing
+- Missing command handling
+- REPL
+- Builtins: exit, echo, type (builtins & executable), program running, pwd.
+
+## TODO
+
+- Implement cd (relative, absolute, home)
+- Output redirection
+- piping
+- history
+- job control
+- auto completion
+- variable interpolation
+
 ## Issues
 
 1. only executables and implemented shell builtins are accepted.
