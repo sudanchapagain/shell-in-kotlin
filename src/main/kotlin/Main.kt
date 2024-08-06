@@ -2,7 +2,7 @@ import java.io.File
 import java.io.IOException
 
 fun main() {
-    val recognizedCommands = arrayOf("exit", "echo", "type")
+    val recognizedCommands = arrayOf("exit", "echo", "pwd", "type")
 
     // REPL loop
     while(true){
@@ -24,6 +24,7 @@ fun main() {
             when (command) {
                 "exit" -> return
                 "echo" -> echo(arguments)
+                "pwd" -> pwd()
                 "type" -> type(arguments, recognizedCommands)
             }
 
@@ -38,6 +39,11 @@ fun main() {
 
 private fun echo(arguments: String) {
     println(arguments)
+}
+
+private fun pwd() {
+    println(File(".").absolutePath)
+    // File object representing the current directory (".") is created and its absolute path is retrieved.
 }
 
 private fun type(arguments: String, recognizedCommands: Array<String>) {
