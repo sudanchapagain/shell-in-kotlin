@@ -1,5 +1,6 @@
 import java.io.File
 import java.io.IOException
+import java.nio.file.Paths
 
 fun main() {
     val recognizedCommands = arrayOf("exit", "echo", "pwd", "type")
@@ -42,7 +43,8 @@ private fun echo(arguments: String) {
 }
 
 private fun pwd() {
-    println(File(".").absolutePath)
+    println(Paths.get("").toAbsolutePath())
+    // println(File(".").absolutePath)
     // File object representing the current directory (".") is created and its absolute path is retrieved.
 }
 
@@ -72,7 +74,11 @@ private fun getPath(arguments: String): String? {
     // character (colon : on Unix-like systems and semicolon ; on Windows).
     val pathEnv = System.getenv("PATH")
     val pathSeparator = if (System.getProperty("os.name").lowercase().contains("win")) ";" else ":"
-    val paths = pathEnv.split(pathSeparator) // makes substrings of all paths specified by the separator above.
+
+    // add current path to the PATH list.
+    // pathEnv.split() makes substrings of all paths specified by the separator above.
+    val currentPath = Paths.get("").toAbsolutePath().toString()
+    val paths = (pathEnv.split(pathSeparator) + currentPath).toSet()
 
     // firstOrNull function iterates over the collection, applies the lambda to each element,
     // and returns the first element that matches the condition or null.
