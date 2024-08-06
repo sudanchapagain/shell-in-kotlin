@@ -1,4 +1,5 @@
 import java.io.File
+import java.io.IOException
 
 fun main() {
     val recognizedCommands = arrayOf("exit", "echo", "type")
@@ -15,13 +16,20 @@ fun main() {
         val command = parts[0]
         // assign the second input substring to arguments if it exists.
         val arguments = if (parts.size > 1) parts[1] else ""
+        // fetch path of command (for executable files, if it exists)
+        val path = getPath(command)
 
+        // Execute shell builtins
         if (recognizedCommands.contains(command)) {
             when (command) {
                 "exit" -> return
                 "echo" -> echo(arguments)
                 "type" -> type(arguments, recognizedCommands)
             }
+
+        // Execute executable files
+        } else if (path != null) {
+           executeProgram(path, command, arguments)
         } else {
             println("${command}: command not found")
         }
@@ -35,6 +43,24 @@ private fun echo(arguments: String) {
 private fun type(arguments: String, recognizedCommands: Array<String>) {
     if (arguments.isEmpty()){ return }
 
+    val path = getPath(arguments)
+
+    // check if it's shell builtin
+    if (recognizedCommands.contains(arguments)){
+        println("$arguments is a shell builtin")
+    } else if (path != null) {
+        // print the path of executable argument
+        if (System.getProperty("os.name").lowercase().contains("win")){
+            println("$arguments is located at $path\\$arguments")
+        } else {
+            println("$arguments is not located at $path/$arguments")
+        }
+    } else {
+        println("$arguments: not found")
+    }
+}
+
+private fun getPath(arguments: String): String? {
     // fetch PATH environment variable which is a
     // string containing a list of directories separated by a specific
     // character (colon : on Unix-like systems and semicolon ; on Windows).
@@ -52,17 +78,34 @@ private fun type(arguments: String, recognizedCommands: Array<String>) {
         file.exists() && file.isFile && file.canExecute()
     }
 
-    // check if it's shell builtin
-    if (recognizedCommands.contains(arguments)){
-        println("$arguments is a shell builtin")
-    } else if (path != null) {
-        // print the path of executable argument
-        if (System.getProperty("os.name").lowercase().contains("win")){
-            println("$arguments is located at $path\\$arguments")
-        } else {
-            println("$arguments is not located at $path/$arguments")
+    return path
+}
+
+private fun executeProgram(path: String, command: String, argument: String){
+    // arguments string to a list of arguments with filters to remove un-necessary spaces.
+    val argumentsList = argument.split(" ").filter { it.isNotEmpty() }
+    val arguments = argumentsList.toTypedArray()
+    // assign path variable the value of `path\command`
+    val pathCommand = path + "\\" + command
+
+    val processBuilder = ProcessBuilder(pathCommand, *arguments)
+    processBuilder.redirectErrorStream(true)
+
+    try {
+        val process = processBuilder.start()
+
+        // Read the output of the process
+        process.inputStream.bufferedReader().use { reader ->
+            reader.lines().forEach { line -> println(line) }
         }
-    } else {
-        println("$arguments: not found")
+
+        // Wait for the process to complete
+        val exitCode = process.waitFor()
+        println("Process exited with code $exitCode")
+    } catch (e: IOException) {
+        println("Failed to execute command: ${e.message}")
+    } catch (e: InterruptedException) {
+        println("Process was interrupted: ${e.message}")
+        Thread.currentThread().interrupt() // Restore interrupted status
     }
 }
