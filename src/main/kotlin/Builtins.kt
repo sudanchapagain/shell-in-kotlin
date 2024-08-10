@@ -39,17 +39,17 @@ class Builtins {
             return
         }
 
-        val path = getPath(arguments)
+        val filePath = getPath(arguments)
 
         // check if it's shell builtin
         if (recognizedCommands.contains(arguments)) {
             println("$arguments is a shell builtin")
-        } else if (path != null) {
+        } else if (filePath != null) {
             // print the path of executable argument
             if (System.getProperty("os.name").lowercase().contains("win")) {
-                println("$arguments is located at $path\\$arguments")
+                println("$arguments is located at $filePath\\$arguments")
             } else {
-                println("$arguments is not located at $path/$arguments")
+                println("$arguments is not located at $filePath/$arguments")
             }
         } else {
             println("$arguments: not found")
@@ -91,7 +91,6 @@ class Builtins {
         // character (colon : on Unix-like systems and semicolon ; on Windows).
         val pathEnv = System.getenv("PATH")
         val pathSeparator = if (System.getProperty("os.name").lowercase().contains("win")) ";" else ":"
-
         // add current path to the PATH list.
         // pathEnv.split() makes substrings of all paths specified by the separator above.
         val currentPath = Paths.get("").toAbsolutePath().toString()

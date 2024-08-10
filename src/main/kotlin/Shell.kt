@@ -1,24 +1,26 @@
+import java.nio.file.Paths
 import kotlin.system.exitProcess
 
 class Shell {
     private val builtins = Builtins()
     private val recognizedCommands = arrayOf("exit", "echo", "pwd", "cd", "type")
+    private var currentPath = Paths.get("").toAbsolutePath()
 
     fun repl() {
         while (true) {
             print("$ ")
             val input = readln().trim()
             val (command, arguments) = splitInput(input)
-            val path = builtins.getPath(command) // fetch path of command (for executable files, if it exists)
-            evaluate(command, arguments, path)
+            val filePath = builtins.getPath(command) // fetch path of command (for executable files, if it exists)
+            evaluate(command, arguments, filePath)
         }
     }
 
-    private fun evaluate(command: String, arguments: String, path: String?) {
+    private fun evaluate(command: String, arguments: String, filePath: String?) {
         if (recognizedCommands.contains(command)) {
             runBuiltin(command, arguments)
-        } else if (path != null) {
-            builtins.executeProgram(path, command, arguments)
+        } else if (filePath != null) {
+            builtins.executeProgram(filePath, command, arguments)
         } else {
             println("${command}: command not found")
         }
