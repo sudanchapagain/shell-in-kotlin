@@ -10,13 +10,13 @@ class Shell {
         while (true) {
             print("$ ")
             val input = readln().trim()
-            val (command, arguments) = splitInput(input)
-            val filePath = builtins.getPath(command) // fetch path of command (for executable files, if it exists)
-            evaluate(command, arguments, filePath)
+            evaluate(input)
         }
     }
 
-    private fun evaluate(command: String, arguments: String, filePath: String?) {
+    private fun evaluate(input: String) {
+        val (command, arguments) = splitInput(input)
+        val filePath = builtins.getPath(command) // fetch path of command (for executable files, if it exists)
         if (recognizedCommands.contains(command)) {
             runBuiltin(command, arguments)
         } else if (filePath != null) {
