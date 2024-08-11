@@ -14,12 +14,11 @@
 - Prompt printing.
 - Missing command handling.
 - REPL.
-- Builtins: exit, echo, type (builtins & executable), pwd.
+- Builtins: exit, echo, type (builtins & executable), pwd, cd (relative, absolute, home)
 - program running.
 
 ### TODO
 
-- Implement cd (relative, absolute, home)
 
 - **Extra**: Output redirection, piping, history, job control, auto-completion, variable interpolation.
 
