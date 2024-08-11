@@ -1,10 +1,11 @@
 import java.nio.file.Paths
+import kotlin.io.path.Path
 import kotlin.system.exitProcess
 
 class Shell {
-    private val builtins = Builtins()
+    private val builtins = Builtins(this)
     private val recognizedCommands = arrayOf("exit", "echo", "pwd", "cd", "type")
-    private var currentPath = Paths.get("").toAbsolutePath()
+    var currentPath = Path("").toAbsolutePath()
 
     fun repl() {
         while (true) {
@@ -30,7 +31,7 @@ class Shell {
         when (command) {
             "exit" -> exitProcess(1)
             "echo" -> builtins.echo(arguments)
-            "pwd" -> builtins.pwd()
+            "pwd" -> builtins.pwd(currentPath)
             "type" -> builtins.type(arguments, recognizedCommands)
             "cd" -> builtins.cd(arguments)
         }

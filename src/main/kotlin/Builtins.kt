@@ -1,38 +1,38 @@
 import java.io.File
 import java.io.IOException
+import java.nio.file.Path
 import java.nio.file.Paths
+import kotlin.io.path.Path
+import kotlin.io.path.exists
+import kotlin.io.path.isDirectory
 
-class Builtins {
+class Builtins(private val shell: Shell) {
     fun echo(arguments: String) {
         println(arguments)
     }
 
-    fun pwd() {
-        println(Paths.get("").toAbsolutePath())
-        // println(File(".").absolutePath)
-        // File object representing the current directory (".") is created and its absolute path is retrieved.
+    fun pwd(currentPath: Path) {
+        println(currentPath)
     }
 
     fun cd(arguments: String) {
-        try {
-            val newDirectory = File(arguments).absoluteFile
+        var currentDirectory = Path("").toAbsolutePath()
 
-            if (newDirectory.isDirectory) {
-                // Set current working directory based on the operating system.
-                if (System.getProperty("os.name").lowercase().contains("win")) {
-                    // On Windows, use the `System.setProperty` method with path converted to use `\`.
-                    System.setProperty("user.dir", newDirectory.absolutePath.replace("/", "\\"))
-                } else {
-                    // On Unix-like systems, set the directory as is.
-                    System.setProperty("user.dir", newDirectory.absolutePath)
-                }
-            } else {
-                println("cd: $arguments: No such file or directory")
+        val newPath = when {
+            arguments.startsWith("/") -> Path(arguments)
+            arguments.startsWith("~") -> {
+                val home = System.getenv("HOME") ?: ""
+                Path(arguments.replace("~", home))
             }
-        } catch (e: SecurityException) {
-            println("cd: $arguments: Permission denied")
+            else -> currentDirectory.resolve(arguments)
         }
-    }
+
+        if (newPath.exists() && newPath.isDirectory()) {
+            newPath.normalize().toAbsolutePath().also { shell.currentPath = it }
+        } else {
+            println("cd: $arguments: No such file or directory")
+        }
+   }
 
     fun type(arguments: String, recognizedCommands: Array<String>) {
         if (arguments.isEmpty()) {
