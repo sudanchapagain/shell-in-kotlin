@@ -14,23 +14,22 @@ class Builtins(private val shell: Shell) {
     }
 
     fun cd(arguments: String) {
-        val currentDirectory = Path("").toAbsolutePath()
-
         val newPath = when {
             arguments.startsWith("/") -> Path(arguments)
             arguments.startsWith("~") -> {
                 val home = System.getenv("HOME") ?: ""
                 Path(arguments.replace("~", home))
             }
-            else -> currentDirectory.resolve(arguments)
+
+            else -> shell.currentPath.resolve(arguments)
         }
 
         if (newPath.exists() && newPath.isDirectory()) {
-            newPath.normalize().toAbsolutePath().also { shell.currentPath = it }
+            shell.currentPath = newPath.normalize().toAbsolutePath()
         } else {
             println("cd: $arguments: No such file or directory")
         }
-   }
+    }
 
     fun type(arguments: String, recognizedCommands: Array<String>) {
         if (arguments.isEmpty()) {
@@ -45,9 +44,9 @@ class Builtins(private val shell: Shell) {
         } else if (filePath != null) {
             // print the path of executable argument
             if (System.getProperty("os.name").lowercase().contains("win")) {
-                println("$arguments is located at $filePath\\$arguments")
+                println("$arguments is $filePath\\$arguments")
             } else {
-                println("$arguments is not located at $filePath/$arguments")
+                println("$arguments is $filePath/$arguments")
             }
         } else {
             println("$arguments: not found")
@@ -59,22 +58,19 @@ class Builtins(private val shell: Shell) {
         val argumentsList = argument.split(" ").filter { it.isNotEmpty() }
         val arguments = argumentsList.toTypedArray()
         // assign path variable the value of `path\command`
-        val pathCommand = path + "\\" + command
+        val pathCommand =
+            if (System.getProperty("os.name").lowercase().contains("win")) "$path\\$command" else "$path/$command"
 
         val processBuilder = ProcessBuilder(pathCommand, *arguments)
         processBuilder.redirectErrorStream(true)
 
         try {
             val process = processBuilder.start()
-
             // Read the output of the process
             process.inputStream.bufferedReader().use { reader ->
                 reader.lines().forEach { line -> println(line) }
             }
-
-            // Wait for the process to complete
-            val exitCode = process.waitFor()
-            println("Process exited with code $exitCode")
+            process.waitFor()
         } catch (e: IOException) {
             println("Failed to execute command: ${e.message}")
         } catch (e: InterruptedException) {

@@ -4,8 +4,9 @@ import kotlin.system.exitProcess
 class Shell {
     private val builtins = Builtins(this)
     private val recognizedCommands = arrayOf("exit", "echo", "pwd", "cd", "type")
+
     @Suppress("HasPlatformType")
-    var currentPath= Path("").toAbsolutePath()
+    var currentPath = Path("").toAbsolutePath()
 
     fun repl() {
         while (true) {
@@ -29,7 +30,7 @@ class Shell {
 
     private fun runBuiltin(command: String, arguments: String) {
         when (command) {
-            "exit" -> exitProcess(1)
+            "exit" -> exitProcess(0)
             "echo" -> builtins.echo(arguments)
             "pwd" -> builtins.pwd(currentPath.toString())
             "type" -> builtins.type(arguments, recognizedCommands)
