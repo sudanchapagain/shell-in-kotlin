@@ -1,7 +1,5 @@
 import java.io.File
 import java.io.IOException
-import java.nio.file.Path
-import java.nio.file.Paths
 import kotlin.io.path.Path
 import kotlin.io.path.exists
 import kotlin.io.path.isDirectory
@@ -11,12 +9,12 @@ class Builtins(private val shell: Shell) {
         println(arguments)
     }
 
-    fun pwd(currentPath: Path) {
+    fun pwd(currentPath: String) {
         println(currentPath)
     }
 
     fun cd(arguments: String) {
-        var currentDirectory = Path("").toAbsolutePath()
+        val currentDirectory = Path("").toAbsolutePath()
 
         val newPath = when {
             arguments.startsWith("/") -> Path(arguments)
@@ -93,7 +91,7 @@ class Builtins(private val shell: Shell) {
         val pathSeparator = if (System.getProperty("os.name").lowercase().contains("win")) ";" else ":"
         // add current path to the PATH list.
         // pathEnv.split() makes substrings of all paths specified by the separator above.
-        val currentPath = Paths.get("").toAbsolutePath().toString()
+        val currentPath = Path("").toAbsolutePath().toString()
         val paths = (pathEnv.split(pathSeparator) + currentPath).toSet()
 
         // firstOrNull function iterates over the collection, applies the lambda to each element,
