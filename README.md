@@ -4,7 +4,7 @@
 
    <p>POSIX compliant-ish shell that's capable of running external programs and builtin
    commands like <code>cd</code>, <code>pwd</code>, <code>echo</code> and more.</p>
-   <img src="./assets/shell-implementation.png" alt="small graphic showcasing shell's implementation"/>
+   <img src="./assets/shell-implementation.png" alt="small graphic showcasing shell's implementation" style="max-height:600px;"/>
 </div>
 
 ## Status
@@ -18,7 +18,6 @@
 - program running.
 
 ### TODO
-
 
 - **Extra**: Output redirection, piping, history, job control, auto-completion, variable interpolation.
 
