@@ -1,4 +1,4 @@
-package np.com.sudanchapagain
+package np.com.sudanchapagain.utils
 
 import java.io.File
 import java.io.IOException
@@ -23,6 +23,7 @@ class Builtins(private val shell: Shell) {
                 val home = System.getenv("HOME") ?: ""
                 arguments.replaceFirst("~", home)
             }
+
             else -> shell.currentPath.resolve(arguments).toString()
         }
 
