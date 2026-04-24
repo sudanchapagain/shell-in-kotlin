@@ -35,8 +35,33 @@ class Shell {
                 break
             }
             if (input.isEmpty()) continue
-            appendHistory(input)
-            evaluate(input)
+            val expanded = expandWindowsEnv(input)
+            appendHistory(expanded)
+            evaluate(expanded)
+        }
+    }
+
+    private fun expandWindowsEnv(text: String): String {
+        val os = System.getProperty("os.name").lowercase()
+        if (!os.contains("win")) return text
+
+        val regex = Regex("%([^%]+)%")
+        val home = System.getenv("HOME") ?: "."
+
+        return regex.replace(text) { match ->
+            val name = match.groupValues[1]
+            val env = System.getenv(name) ?: System.getenv(name.uppercase())
+            if (env != null) return@replace env
+
+            when (name.uppercase()) {
+                "APPDATA" -> System.getenv("APPDATA") ?: (System.getenv("XDG_CONFIG_HOME") ?: "$home/.config")
+                "LOCALAPPDATA" -> System.getenv("LOCALAPPDATA") ?: (System.getenv("XDG_DATA_HOME") ?: "$home/.local/share")
+                "TEMP", "TMP" -> System.getenv("TEMP") ?: System.getProperty("java.io.tmpdir") ?: "/tmp"
+                "SYSTEMROOT" -> System.getenv("SYSTEMROOT") ?: "C:\\Windows"
+                "ALLUSERSPROFILE" -> System.getenv("ALLUSERSPROFILE") ?: "C:\\ProgramData"
+                "USERPROFILE" -> System.getenv("USERPROFILE") ?: home
+                else -> ""
+            }
         }
     }
 
@@ -100,5 +125,4 @@ class Shell {
             }
         }
     }
-
 }

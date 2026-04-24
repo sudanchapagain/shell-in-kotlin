@@ -6,4 +6,3 @@ todo
 - job control
 - auto-completion
 - variable interpolation
-- properly parse windows' PATH (`%<name>%`)
