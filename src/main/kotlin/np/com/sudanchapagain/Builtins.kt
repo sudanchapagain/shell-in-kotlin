@@ -16,15 +16,17 @@ class Builtins(private val shell: Shell) {
     }
 
     fun cd(arguments: String) {
-        val newPath = when {
-            arguments.startsWith("/") -> Path(arguments)
+        val target = when {
+            arguments.isBlank() -> System.getenv("HOME") ?: "."
+            arguments.startsWith("/") -> arguments
             arguments.startsWith("~") -> {
                 val home = System.getenv("HOME") ?: ""
-                Path(arguments.replace("~", home))
+                arguments.replaceFirst("~", home)
             }
-
-            else -> shell.currentPath.resolve(arguments)
+            else -> shell.currentPath.resolve(arguments).toString()
         }
+
+        val newPath = Path(target)
 
         if (newPath.exists() && newPath.isDirectory()) {
             shell.currentPath = newPath.normalize().toAbsolutePath()
@@ -33,18 +35,16 @@ class Builtins(private val shell: Shell) {
         }
     }
 
-    fun type(arguments: String, recognizedCommands: Array<String>) {
+    fun type(arguments: String, recognizedCommands: Set<String>) {
         if (arguments.isEmpty()) {
             return
         }
 
         val filePath = getPath(arguments)
 
-        // check if it's shell builtin
         if (recognizedCommands.contains(arguments)) {
             println("$arguments is a shell builtin")
         } else if (filePath != null) {
-            // print the path of executable argument
             if (System.getProperty("os.name").lowercase().contains("win")) {
                 println("$arguments is $filePath\\$arguments")
             } else {
@@ -56,19 +56,21 @@ class Builtins(private val shell: Shell) {
     }
 
     fun executeProgram(path: String, command: String, argument: String) {
-        // arguments string to a list of arguments with filters to remove un-necessary spaces.
         val argumentsList = argument.split(" ").filter { it.isNotEmpty() }
-        val arguments = argumentsList.toTypedArray()
-        // assign path variable the value of `path\command`
-        val pathCommand =
-            if (System.getProperty("os.name").lowercase().contains("win")) "$path\\$command" else "$path/$command"
+        val executable = File(path, command)
+        val commandPath = executable.absolutePath
 
-        val processBuilder = ProcessBuilder(pathCommand, *arguments)
+        val cmd = mutableListOf<String>().apply {
+            add(commandPath)
+            addAll(argumentsList)
+        }
+
+        val processBuilder = ProcessBuilder(cmd)
         processBuilder.redirectErrorStream(true)
+        processBuilder.directory(shell.currentPath.toFile())
 
         try {
             val process = processBuilder.start()
-            // Read the output of the process
             process.inputStream.bufferedReader().use { reader ->
                 reader.lines().forEach { line -> println(line) }
             }
@@ -77,26 +79,17 @@ class Builtins(private val shell: Shell) {
             println("Failed to execute command: ${e.message}")
         } catch (e: InterruptedException) {
             println("Process was interrupted: ${e.message}")
-            Thread.currentThread().interrupt() // Restore interrupted status
+            Thread.currentThread().interrupt()
         }
     }
 
     fun getPath(arguments: String): String? {
-        // fetch PATH environment variable which is a
-        // string containing a list of directories separated by a specific
-        // character (colon : on Unix-like systems and semicolon ; on Windows).
-        val pathEnv = System.getenv("PATH")
+        val pathEnv = System.getenv("PATH") ?: ""
         val pathSeparator = if (System.getProperty("os.name").lowercase().contains("win")) ";" else ":"
-        // add current path to the PATH list.
-        // pathEnv.split() makes substrings of all paths specified by the separator above.
-        val currentPath = Path("").toAbsolutePath().toString()
-        val paths = (pathEnv.split(pathSeparator) + currentPath).toSet()
 
-        // firstOrNull function iterates over the collection, applies the lambda to each element,
-        // and returns the first element that matches the condition or null.
-        // Lambda expression makes a file object that take the directory and the file name
-        // to represent target which is matched to test if it exists, is a file, and is an executable.
-        // dir is a placeholder for the item in paths currently being processed.
+        val currentPath = shell.currentPath.toString()
+        val paths = (pathEnv.split(pathSeparator) + currentPath).filter { it.isNotBlank() }.toSet()
+
         val path = paths.firstOrNull { dir ->
             val file = File(dir, arguments)
             file.exists() && file.isFile && file.canExecute()
